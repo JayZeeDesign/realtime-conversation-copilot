@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversation copilot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f3f4f6;
+            padding: 20px;
+            text-align: center;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #transcript, #suggestion {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-top: 20px;
+            height: 150px;
+            overflow-y: auto;
+        }
+        .container {
+            width: 80%;
+            margin: 0 auto;
+        }
+        .output-label {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <label for="prompt">Prompt:</label>
+        <textarea id="prompt" rows="10" style="width: 100%;">I'm having a user interview, above is the interview script so far
+I'm building an app to help dental clinic to find talents & employees;
+                        
+You are a world-class UX researcher, based on information, give me 2 questions I should ask the user to dive further based on what they say; 
+                        
+be short, less than 150 words</textarea>
+    </div>
+    <button id="recordButton">Start Recording</button>
+    <button id="summaryButton">Get Suggestion</button>
+    <div id="transcript"></div>
+    <div>Suggestion: <div id="suggestion"></div></div>
+    
+    <script>
+        const recordButton = document.getElementById('recordButton');
+        const transcriptDiv = document.getElementById('transcript');
+        const summaryButton = document.getElementById('summaryButton');
+        
+        let isRecording = false;
+        let mediaRecorder;
+        let intervalId;
+        let full_transcript = '';
+
+        // Set up WebSocket event listeners
+        summaryButton.addEventListener('click', async () => {
+            const promptText = document.getElementById('prompt').value;
+            
+            const response = await fetch('/get-suggestion', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ transcript: full_transcript, prompt: promptText })
+            });
+
+            const data = await response.json();
+            console.log(data);
+            document.getElementById('suggestion').textContent = data.suggestion;
+        });
+
+        recordButton.addEventListener('click', () => {
+            if (!isRecording) {
+                startRecording();
+                recordButton.textContent = 'Stop Recording';
+            } else {
+                stopRecording();
+                recordButton.textContent = 'Start Recording';
+            }
+            isRecording = !isRecording;
+        });
+
+        async function startRecording() {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+            function createRecorder() {
+                mediaRecorder = new MediaRecorder(stream);
+
+                mediaRecorder.addEventListener('dataavailable', async event => {
+                    console.log('Data available');
+                    const audioBlob = event.data;
+                    const formData = new FormData();
+                    formData.append('audio', audioBlob);
+
+                    const response = await fetch('/process-audio', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const data = await response.json();
+                    if(data.transcript != null){
+                        full_transcript += data.transcript;
+                        transcriptDiv.textContent = full_transcript;
+                    }
+                    console.log(data.transcript)
+                });
+                
+                mediaRecorder.start();
+            }
+
+            createRecorder(); // Start recording initially
+
+            // Set interval to stop current recorder and start a new one every 10 seconds
+            intervalId = setInterval(() => {
+                mediaRecorder.stop();
+                createRecorder();
+            }, 5000);
+        }
+
+        function stopRecording() {
+            clearInterval(intervalId); // Stop the interval
+            mediaRecorder.stop();
+        }
+    </script>
+</body>
+</html>
