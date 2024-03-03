@@ -35,8 +35,9 @@ def index():
 @app.route("/process-audio", methods=["POST"])
 def process_audio_data():
     audio_data = request.files["audio"].read()
+    language = request.form.get('language')
 
-    print("Processing audio...")
+    print("Processing audio in {} language...".format(language))
     # Create a temporary file to save the audio data
     try:
         with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_audio:
@@ -51,7 +52,7 @@ def process_audio_data():
             input={
                 "task": "transcribe",
                 "audio": temp_audio_url,
-                "language": "None",
+                "language": language,
                 "timestamp": "chunk",
                 "batch_size": 64,
                 "diarise_audio": False
