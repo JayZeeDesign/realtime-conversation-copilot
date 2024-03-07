@@ -71,7 +71,6 @@ def process_audio_data():
 # function to generate suggestion using mixtral
 @app.route("/get-suggestion", methods=["POST"])
 def get_suggestion():
-    print("Getting suggestion...")
     data = request.get_json()  # Parse JSON data from the request
     transcript = data.get("transcript", "")  # Extract transcript
     prompt_text = data.get("prompt", "")  # Extract prompt text
@@ -81,6 +80,12 @@ def get_suggestion():
     ------
     {prompt_text}
     """
+
+    print('Sending request for a suggestion with the prompt:')
+    print('=====')
+    print(prompt)
+    print('=====')
+    print('Waiting for the API response...')
 
     suggestion = ""
     for event in model.stream(
@@ -97,7 +102,9 @@ def get_suggestion():
             "repetition_penalty": 1.15,
         },
     ):
-        suggestion += str(event)  # Accumulate the output
+        suggestion_piece = str(event)
+        print('Output: ' + suggestion_piece)
+        suggestion += suggestion_piece  # Accumulate the output
 
     print(suggestion)
 
