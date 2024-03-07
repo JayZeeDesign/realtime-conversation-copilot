@@ -1,22 +1,31 @@
 from flask import Flask, request, jsonify, render_template
+import os
 import replicate
 import tempfile
-import os
-import boto3
-
-aws_access_key = "xxxxxx"
-aws_secret_key = "xxxxx"
-bucket_name = "xxxx"
-
-s3 = boto3.client(
-    "s3", aws_access_key_id=aws_access_key, aws_secret_access_key=aws_secret_key
-)
+import requests
 
 app = Flask(__name__)
 model = replicate
 
+# here goes your REPLICATE API TOKEN, don't forget to paste it here
+os.environ["REPLICATE_API_TOKEN"] = ""
 
-# render html
+
+def upload_file(file_path):
+    with open(file_path, 'rb') as f:
+        files = {'file': (file_path, f)}
+        r = requests.post('https://file.io/', files=files)
+
+        if r.status_code == 200:
+            response_data = r.json()
+
+            return response_data['link']
+        else:
+            print(f'File upload error: {r.text}')
+
+            return None
+
+
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -26,42 +35,42 @@ def index():
 @app.route("/process-audio", methods=["POST"])
 def process_audio_data():
     audio_data = request.files["audio"].read()
+    language = request.form.get('language')
 
-    print("Processing audio...")
+    print("Processing audio in {} language...".format(language))
     # Create a temporary file to save the audio data
     try:
         with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_audio:
             temp_audio.write(audio_data)
             temp_audio.flush()
 
-            s3.upload_file(temp_audio.name, bucket_name, temp_audio.name)
-            temp_audio_uri = f"https://{bucket_name}.s3.amazonaws.com/{temp_audio.name}"
+        temp_audio_url = upload_file(temp_audio.name)
+        print(temp_audio_url)
 
-        output = model.run(
+        output = replicate.run(
             "vaibhavs10/incredibly-fast-whisper:3ab86df6c8f54c11309d4d1f930ac292bad43ace52d10c80d87eb258b3c9f79c",
             input={
                 "task": "transcribe",
-                "audio": temp_audio_uri,
-                "language": "english",
+                "audio": temp_audio_url,
+                "language": language,
                 "timestamp": "chunk",
                 "batch_size": 64,
-                "diarise_audio": False,
-            },
+                "diarise_audio": False
+            }
         )
 
-        print(output)
-        results = output["text"]
+        print(output["text"])
 
-        return jsonify({"transcript": results})
+        return jsonify({"transcript": output["text"]})
     except Exception as e:
         print(f"Error running Replicate model: {e}")
-        return None
+
+        return jsonify({"error": str(e)})
 
 
 # function to generate suggestion using mixtral
 @app.route("/get-suggestion", methods=["POST"])
 def get_suggestion():
-    print("Getting suggestion...")
     data = request.get_json()  # Parse JSON data from the request
     transcript = data.get("transcript", "")  # Extract transcript
     prompt_text = data.get("prompt", "")  # Extract prompt text
@@ -71,6 +80,12 @@ def get_suggestion():
     ------
     {prompt_text}
     """
+
+    print('Sending request for a suggestion with the prompt:')
+    print('=====')
+    print(prompt)
+    print('=====')
+    print('Waiting for the API response...')
 
     suggestion = ""
     for event in model.stream(
@@ -87,7 +102,11 @@ def get_suggestion():
             "repetition_penalty": 1.15,
         },
     ):
-        suggestion += str(event)  # Accumulate the output
+        suggestion_piece = str(event)
+        print('Output: ' + suggestion_piece)
+        suggestion += suggestion_piece  # Accumulate the output
+
+    print(suggestion)
 
     return jsonify({"suggestion": suggestion})  # Send as JSON response
 

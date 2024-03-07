@@ -42,6 +42,112 @@
 </head>
 <body>
     <div>
+        <label for="language">Choose a language:</label>
+        <select id="language" name="language">
+            <option value="english">English</option>
+            <option value="russian">Russian</option>
+            <option value="afrikaans">Afrikaans</option>
+            <option value="albanian">Albanian</option>
+            <option value="amharic">Amharic</option>
+            <option value="arabic">Arabic</option>
+            <option value="armenian">Armenian</option>
+            <option value="assamese">Assamese</option>
+            <option value="azerbaijani">Azerbaijani</option>
+            <option value="bashkir">Bashkir</option>
+            <option value="basque">Basque</option>
+            <option value="belarusian">Belarusian</option>
+            <option value="bengali">Bengali</option>
+            <option value="bosnian">Bosnian</option>
+            <option value="breton">Breton</option>
+            <option value="bulgarian">Bulgarian</option>
+            <option value="cantonese">Cantonese</option>
+            <option value="catalan">Catalan</option>
+            <option value="chinese">Chinese</option>
+            <option value="croatian">Croatian</option>
+            <option value="czech">Czech</option>
+            <option value="danish">Danish</option>
+            <option value="dutch">Dutch</option>
+            <option value="estonian">Estonian</option>
+            <option value="faroese">Faroese</option>
+            <option value="finnish">Finnish</option>
+            <option value="french">French</option>
+            <option value="galician">Galician</option>
+            <option value="georgian">Georgian</option>
+            <option value="german">German</option>
+            <option value="greek">Greek</option>
+            <option value="gujarati">Gujarati</option>
+            <option value="haitian creole">Haitian Creole</option>
+            <option value="hausa">Hausa</option>
+            <option value="hawaiian">Hawaiian</option>
+            <option value="hebrew">Hebrew</option>
+            <option value="hindi">Hindi</option>
+            <option value="hungarian">Hungarian</option>
+            <option value="icelandic">Icelandic</option>
+            <option value="indonesian">Indonesian</option>
+            <option value="italian">Italian</option>
+            <option value="japanese">Japanese</option>
+            <option value="javanese">Javanese</option>
+            <option value="kannada">Kannada</option>
+            <option value="kazakh">Kazakh</option>
+            <option value="khmer">Khmer</option>
+            <option value="korean">Korean</option>
+            <option value="lao">Lao</option>
+            <option value="latin">Latin</option>
+            <option value="latvian">Latvian</option>
+            <option value="lingala">Lingala</option>
+            <option value="lithuanian">Lithuanian</option>
+            <option value="luxembourgish">Luxembourgish</option>
+            <option value="macedonian">Macedonian</option>
+            <option value="malagasy">Malagasy</option>
+            <option value="malay">Malay</option>
+            <option value="malayalam">Malayalam</option>
+            <option value="maltese">Maltese</option>
+            <option value="maori">Maori</option>
+            <option value="marathi">Marathi</option>
+            <option value="mongolian">Mongolian</option>
+            <option value="myanmar">Myanmar</option>
+            <option value="nepali">Nepali</option>
+            <option value="norwegian">Norwegian</option>
+            <option value="nynorsk">Nynorsk</option>
+            <option value="occitan">Occitan</option>
+            <option value="pashto">Pashto</option>
+            <option value="persian">Persian</option>
+            <option value="polish">Polish</option>
+            <option value="portuguese">Portuguese</option>
+            <option value="punjabi">Punjabi</option>
+            <option value="romanian">Romanian</option>
+            <option value="sanskrit">Sanskrit</option>
+            <option value="serbian">Serbian</option>
+            <option value="shona">Shona</option>
+            <option value="sindhi">Sindhi</option>
+            <option value="sinhala">Sinhala</option>
+            <option value="slovak">Slovak</option>
+            <option value="slovenian">Slovenian</option>
+            <option value="somali">Somali</option>
+            <option value="spanish">Spanish</option>
+            <option value="sundanese">Sundanese</option>
+            <option value="swahili">Swahili</option>
+            <option value="swedish">Swedish</option>
+            <option value="tagalog">Tagalog</option>
+            <option value="tajik">Tajik</option>
+            <option value="tamil">Tamil</option>
+            <option value="tatar">Tatar</option>
+            <option value="telugu">Telugu</option>
+            <option value="thai">Thai</option>
+            <option value="tibetan">Tibetan</option>
+            <option value="turkish">Turkish</option>
+            <option value="turkmen">Turkmen</option>
+            <option value="ukrainian">Ukrainian</option>
+            <option value="urdu">Urdu</option>
+            <option value="uzbek">Uzbek</option>
+            <option value="vietnamese">Vietnamese</option>
+            <option value="welsh">Welsh</option>
+            <option value="yiddish">Yiddish</option>
+            <option value="yoruba">Yoruba</option>
+
+        </select>
+    </div>
+    <div>
         <label for="prompt">Prompt:</label>
         <textarea id="prompt" rows="10" style="width: 100%;">I'm having a user interview, above is the interview script so far
 I'm building an app to help dental clinic to find talents & employees;
@@ -104,6 +210,9 @@ be short, less than 150 words</textarea>
                     const audioBlob = event.data;
                     const formData = new FormData();
                     formData.append('audio', audioBlob);
+
+                    const language = document.getElementById('language').value;
+                    formData.append('language', language);
 
                     const response = await fetch('/process-audio', {
                         method: 'POST',
